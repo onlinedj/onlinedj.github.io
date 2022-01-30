@@ -1,5 +1,5 @@
 ---
-title: autosar_secoc.md
+title: Autosar SecOC
 date: 2022-01-29 15:20:44
 tags:
 ---
