@@ -20,18 +20,20 @@
     var CONFIG = {"hostname":"xinle.ink","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="SMPSymmetric Multi-Processing (SMP) 直译是同步多处理，即多个核心进行同步的管理调度，可以共享内存、外设等硬件。通常多个核心运行在一个操作系统中，并由任务调度器统一调度。 AMPAsymmetric Multi-processing (AMP) 直译是异步多处理，即多个核心分别承担工作，相互之间隔离内存、外设等硬件。出于安全、时效等设计考虑，多个核心可能独立运行不">
+  <meta name="description" content="SMPSymmetric Multi-Processing (SMP) 直译是同步多处理，即多个核心进行同步的管理调度，可以共享内存、外设等硬件。通常是多个完全相同的核心运行在一个操作系统中，并由任务调度器统一调度。 AMPAsymmetric Multi-processing (AMP) 直译是异步多处理，即多个核心分别承担工作，相互之间隔离内存、外设等硬件。出于安全、时效等设计考虑，多个核心可">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Arm 多核类型">
 <meta property="og:url" content="http://xinle.ink/2022/02/14/arm_multi_core/index.html">
 <meta property="og:site_name" content="超神微步足道">
-<meta property="og:description" content="SMPSymmetric Multi-Processing (SMP) 直译是同步多处理，即多个核心进行同步的管理调度，可以共享内存、外设等硬件。通常多个核心运行在一个操作系统中，并由任务调度器统一调度。 AMPAsymmetric Multi-processing (AMP) 直译是异步多处理，即多个核心分别承担工作，相互之间隔离内存、外设等硬件。出于安全、时效等设计考虑，多个核心可能独立运行不">
+<meta property="og:description" content="SMPSymmetric Multi-Processing (SMP) 直译是同步多处理，即多个核心进行同步的管理调度，可以共享内存、外设等硬件。通常是多个完全相同的核心运行在一个操作系统中，并由任务调度器统一调度。 AMPAsymmetric Multi-processing (AMP) 直译是异步多处理，即多个核心分别承担工作，相互之间隔离内存、外设等硬件。出于安全、时效等设计考虑，多个核心可">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://xinle.ink/images/dynamIQ110.svg">
 <meta property="article:published_time" content="2022-02-14T15:20:44.000Z">
-<meta property="article:modified_time" content="2022-02-14T07:10:06.556Z">
+<meta property="article:modified_time" content="2022-02-15T06:54:57.064Z">
 <meta property="article:author" content="Jacky Yang">
 <meta property="article:tag" content="arm">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://xinle.ink/images/dynamIQ110.svg">
 
 <link rel="canonical" href="http://xinle.ink/2022/02/14/arm_multi_core/">
 
@@ -174,10 +176,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-02-14 15:20:44 / 修改时间：07:10:06" itemprop="dateCreated datePublished" datetime="2022-02-14T15:20:44+00:00">2022-02-14</time>
+              <time title="创建时间：2022-02-14 15:20:44" itemprop="dateCreated datePublished" datetime="2022-02-14T15:20:44+00:00">2022-02-14</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-02-15 06:54:57" itemprop="dateModified" datetime="2022-02-15T06:54:57+00:00">2022-02-15</time>
+              </span>
 
           
 
@@ -190,9 +198,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="SMP"><a href="#SMP" class="headerlink" title="SMP"></a>SMP</h2><p>Symmetric Multi-Processing (SMP) 直译是同步多处理，即多个核心进行同步的管理调度，可以共享内存、外设等硬件。通常多个核心运行在一个操作系统中，并由任务调度器统一调度。</p>
+        <h2 id="SMP"><a href="#SMP" class="headerlink" title="SMP"></a>SMP</h2><p>Symmetric Multi-Processing (SMP) 直译是同步多处理，即多个核心进行同步的管理调度，可以共享内存、外设等硬件。通常是多个完全相同的核心运行在一个操作系统中，并由任务调度器统一调度。</p>
 <h2 id="AMP"><a href="#AMP" class="headerlink" title="AMP"></a>AMP</h2><p>Asymmetric Multi-processing (AMP) 直译是异步多处理，即多个核心分别承担工作，相互之间隔离内存、外设等硬件。出于安全、时效等设计考虑，多个核心可能独立运行不同的操作系统。</p>
-<h2 id="HMP"><a href="#HMP" class="headerlink" title="HMP"></a>HMP</h2><p>Heterogeneous multi-processing (HMP) 是异构的多处理，即将多核以cluster分组，组内多核是微架构相同的核，组间保证指令集架构相同。</p>
+<h2 id="HMP"><a href="#HMP" class="headerlink" title="HMP"></a>HMP</h2><p>Heterogeneous multi-processing (HMP) 是异质的多处理，即将多核以cluster分组，组内多核是微架构相同的核，组间只需保证指令集架构相同。通常HMP多个核心运行在统一的调度器中。</p>
+<h2 id="CACHE"><a href="#CACHE" class="headerlink" title="CACHE"></a>CACHE</h2><p>SMP最简单，多个完全相同的核组合在一起，共享L2 cache,可以保证cache一致性。<br>AMP因为多个核心是独立运行,不需要关心cache一致性。<br>HMP可以理解为多组SMP，需要保证组间cache一致性。<br>在2011引入big.LITTLE技术中，采用cache coherent interconnect,在2017年引入第二代DynamIQ big.LITTLE技术中，增加了shared L3<br><img src="/images/dynamIQ110.svg" alt="DSU-110 arch" title="DSU-110"></p>
 
     </div>
 
@@ -290,7 +299,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SMP"><span class="nav-number">1.</span> <span class="nav-text">SMP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AMP"><span class="nav-number">2.</span> <span class="nav-text">AMP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HMP"><span class="nav-number">3.</span> <span class="nav-text">HMP</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SMP"><span class="nav-number">1.</span> <span class="nav-text">SMP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AMP"><span class="nav-number">2.</span> <span class="nav-text">AMP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HMP"><span class="nav-number">3.</span> <span class="nav-text">HMP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CACHE"><span class="nav-number">4.</span> <span class="nav-text">CACHE</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
