@@ -17,5 +17,5 @@ Heterogeneous multi-processing (HMP) 是异质的多处理，即将多核以clus
 SMP最简单，多个完全相同的核组合在一起，共享L2 cache,可以保证cache一致性。   
 AMP因为多个核心是独立运行,不需要关心cache一致性。     
 HMP可以理解为多组SMP，需要保证组间cache一致性。   
-在2011引入big.LITTLE技术中，采用cache coherent interconnect,在2017年引入第二代DynamIQ big.LITTLE技术中，增加了shared L3
+在2013引入big.LITTLE技术中，采用cache coherent interconnect,在2017年引入第二代DynamIQ big.LITTLE技术中，增加了shared L3
 ![DSU-110 arch](/images/dynamIQ110.svg "DSU-110")
