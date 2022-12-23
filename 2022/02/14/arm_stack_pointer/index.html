@@ -20,22 +20,27 @@
     var CONFIG = {"hostname":"xinle.ink","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="SecOC简介">
+  <meta name="description" content="前言本文主要介绍了栈相关的技术点， 通过这些点的填充，让大家对栈有一个全面的认识。 Arm通用寄存器说明arm32 包含16个通用寄存器（r0-r15）和 2个特殊寄存器CPSR和SPSR。r0-r12用于通用功能 r13 通常用来做栈指针(stack pointer), 简称SP r14 通常用来做链接寄存器(link register)，用于保存子流程的返回地址，简称LR r15 通常用来做程">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Autosar SecOC">
-<meta property="og:url" content="http://xinle.ink/2022/01/29/autosar_secoc/index.html">
+<meta property="og:title" content="Arm 栈指针漫谈">
+<meta property="og:url" content="http://xinle.ink/2022/02/14/arm_stack_pointer/index.html">
 <meta property="og:site_name" content="超神微步足道">
-<meta property="og:description" content="SecOC简介">
+<meta property="og:description" content="前言本文主要介绍了栈相关的技术点， 通过这些点的填充，让大家对栈有一个全面的认识。 Arm通用寄存器说明arm32 包含16个通用寄存器（r0-r15）和 2个特殊寄存器CPSR和SPSR。r0-r12用于通用功能 r13 通常用来做栈指针(stack pointer), 简称SP r14 通常用来做链接寄存器(link register)，用于保存子流程的返回地址，简称LR r15 通常用来做程">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://xinle.ink/images/secoc_arch.png">
-<meta property="article:published_time" content="2022-01-29T15:20:44.000Z">
+<meta property="og:image" content="http://xinle.ink/images/aarch32_registers.png">
+<meta property="og:image" content="http://xinle.ink/images/aapcs32_regs.png">
+<meta property="og:image" content="http://xinle.ink/images/predeclared_regs.png">
+<meta property="og:image" content="http://xinle.ink/images/apcs_predeclare_match.png">
+<meta property="og:image" content="http://xinle.ink/images/program_memory_layout.jpg">
+<meta property="og:image" content="http://xinle.ink/images/stack_frame.png">
+<meta property="article:published_time" content="2022-02-14T15:20:44.000Z">
 <meta property="article:modified_time" content="2022-12-23T10:02:21.227Z">
 <meta property="article:author" content="Jacky Yang">
-<meta property="article:tag" content="autosar">
+<meta property="article:tag" content="arm">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://xinle.ink/images/secoc_arch.png">
+<meta name="twitter:image" content="http://xinle.ink/images/aarch32_registers.png">
 
-<link rel="canonical" href="http://xinle.ink/2022/01/29/autosar_secoc/">
+<link rel="canonical" href="http://xinle.ink/2022/02/14/arm_stack_pointer/">
 
 
 <script id="page-configurations">
@@ -48,7 +53,7 @@
   };
 </script>
 
-  <title>Autosar SecOC | 超神微步足道</title>
+  <title>Arm 栈指针漫谈 | 超神微步足道</title>
   
 
 
@@ -154,7 +159,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://xinle.ink/2022/01/29/autosar_secoc/">
+    <link itemprop="mainEntityOfPage" href="http://xinle.ink/2022/02/14/arm_stack_pointer/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpeg">
@@ -167,7 +172,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Autosar SecOC
+          Arm 栈指针漫谈
         </h1>
 
         <div class="post-meta">
@@ -177,7 +182,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2022-01-29 15:20:44" itemprop="dateCreated datePublished" datetime="2022-01-29T15:20:44+00:00">2022-01-29</time>
+              <time title="创建时间：2022-02-14 15:20:44" itemprop="dateCreated datePublished" datetime="2022-02-14T15:20:44+00:00">2022-02-14</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
@@ -198,7 +203,38 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="SecOC简介"><a href="#SecOC简介" class="headerlink" title="SecOC简介"></a>SecOC简介</h2><p><img src="/images/secoc_arch.png" alt="secoc arch" title="AUTOSAR SecOC"></p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文主要介绍了栈相关的技术点， 通过这些点的填充，让大家对栈有一个全面的认识。</p>
+<h2 id="Arm通用寄存器说明"><a href="#Arm通用寄存器说明" class="headerlink" title="Arm通用寄存器说明"></a>Arm通用寄存器说明</h2><p>arm32 包含16个通用寄存器（r0-r15）和 2个特殊寄存器CPSR和SPSR。<br>r0-r12用于通用功能</p>
+<p>r13 通常用来做栈指针(stack pointer), 简称SP</p>
+<p>r14 通常用来做链接寄存器(link register)，用于保存子流程的返回地址，简称LR</p>
+<p>r15 通常用来做程序计数器（program counter）, 用于保存当前要执行的程序地址，简称PC</p>
+<p><em>下表中带后缀的为banked register，也就是在对应的模式下有独立的寄存器</em><br><img src="/images/aarch32_registers.png" alt="aarch32 registers"></p>
+<p>根据AAPCS32规范的定义, 对通用寄存器的使用做了进一步限定<br>其中，</p>
+<p>r0-r3 作为输入参数</p>
+<p>r4-r11 作为变量寄存器使用</p>
+<p>根据平台定义，r9 还可以作为static base/ thread register</p>
+<p>r11 可以用作栈帧(frame pointer)使用，简称FP</p>
+<p>r12 是用作intra process scratch register，简称IP<br><img src="/images/aapcs32_regs.png" alt="aapcs32 registers"></p>
+<p>关于这些通用寄存器的别名，可以参考下图</p>
+<p><img src="/images/predeclared_regs.png" alt="predeclared register names"></p>
+<p>把两者结合起来看，总结如下图</p>
+<p><img src="/images/apcs_predeclare_match.png" alt="predeclared register match"></p>
+<h2 id="栈和栈指针"><a href="#栈和栈指针" class="headerlink" title="栈和栈指针"></a>栈和栈指针</h2><p>对于执行一段程序而言，我们需要以下几个部分：<br>text/data/bss/heap/stack</p>
+<p><img src="/images/program_memory_layout.jpg" alt="program layout"></p>
+<p>其中栈是一段连续的内存空间，栈的使用从高地址往低地址，先进后出，栈指针存储了当前栈顶的位置</p>
+<h4 id="对于SP的约束条件"><a href="#对于SP的约束条件" class="headerlink" title="对于SP的约束条件"></a>对于SP的约束条件</h4><ul>
+<li>stack_limit/stack_top &lt; SP &lt; stack_base</li>
+<li>SP必须4字节对齐</li>
+</ul>
+<h2 id="栈帧和栈帧指针"><a href="#栈帧和栈帧指针" class="headerlink" title="栈帧和栈帧指针"></a>栈帧和栈帧指针</h2><p>栈帧可以理解成函数所有局部变量压栈组合形成的一个数据结构，通常会把LR+FP放到栈顶</p>
+<p>栈帧指针存储了父函数的栈顶位置，通过栈帧指针，形成了一个栈帧链表, 利用栈帧指针可以快速定位到函数的栈顶</p>
+<p><img src="/images/stack_frame.png" alt="stack frame"></p>
+<h2 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h2><p>在各类异常、中断的处理中，由于切换了上下文，我们在执行异常处理代码之前，必须保存通用寄存器到栈中，否则可能无法恢复之前的上下文。</p>
+<p>可以看到SP在各个模式下都有一个banked寄存器，这样就方便我们在不同上下文使用不同的栈内存。<br>比如收到一个irq中断，cpu切换到irq mode， sp默认使用的是sp_irq</p>
+<h2 id="引用链接"><a href="#引用链接" class="headerlink" title="引用链接"></a>引用链接</h2><p>[aarch32_registers] <a target="_blank" rel="noopener" href="https://developer.arm.com/documentation/dui0801/k/Overview-of-AArch32-state/Registers-in-AArch32-state?lang=en">https://developer.arm.com/documentation/dui0801/k/Overview-of-AArch32-state/Registers-in-AArch32-state?lang=en</a></p>
+<p>[AAPCS32] <a target="_blank" rel="noopener" href="https://github.com/ARM-software/abi-aa/releases/download/2022Q3/aapcs32.pdf">https://github.com/ARM-software/abi-aa/releases/download/2022Q3/aapcs32.pdf</a></p>
+<p>[predeclared register names] <a target="_blank" rel="noopener" href="https://developer.arm.com/documentation/dui0068/b/Assembler-Reference/Predefined-register-and-coprocessor-names/Predeclared-register-names">https://developer.arm.com/documentation/dui0068/b/Assembler-Reference/Predefined-register-and-coprocessor-names/Predeclared-register-names</a></p>
+<p>[apcs register match] <a target="_blank" rel="noopener" href="https://developer.arm.com/documentation/dui0041/c/ARM-Procedure-Call-Standard/APCS-definition/APCS-register-names-and-roles">https://developer.arm.com/documentation/dui0041/c/ARM-Procedure-Call-Standard/APCS-definition/APCS-register-names-and-roles</a></p>
 
     </div>
 
@@ -214,7 +250,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://xinle.ink/2022/01/29/autosar_secoc/" title="Autosar SecOC">http://xinle.ink/2022/01/29/autosar_secoc/</a>
+    <a href="http://xinle.ink/2022/02/14/arm_stack_pointer/" title="Arm 栈指针漫谈">http://xinle.ink/2022/02/14/arm_stack_pointer/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -225,7 +261,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/autosar/" rel="tag"># autosar</a>
+              <a href="/tags/arm/" rel="tag"># arm</a>
           </div>
 
         
@@ -233,10 +269,13 @@
 
         
     <div class="post-nav">
-      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/2022/02/14/arm_stack_pointer/" rel="next" title="Arm 栈指针漫谈">
-      Arm 栈指针漫谈 <i class="fa fa-chevron-right"></i>
+    <a href="/2022/01/29/autosar_secoc/" rel="prev" title="Autosar SecOC">
+      <i class="fa fa-chevron-left"></i> Autosar SecOC
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/02/14/arm_multi_core/" rel="next" title="Arm 多核类型">
+      Arm 多核类型 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -296,7 +335,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SecOC%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">SecOC简介</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Arm%E9%80%9A%E7%94%A8%E5%AF%84%E5%AD%98%E5%99%A8%E8%AF%B4%E6%98%8E"><span class="nav-number">2.</span> <span class="nav-text">Arm通用寄存器说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%88%E5%92%8C%E6%A0%88%E6%8C%87%E9%92%88"><span class="nav-number">3.</span> <span class="nav-text">栈和栈指针</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8ESP%E7%9A%84%E7%BA%A6%E6%9D%9F%E6%9D%A1%E4%BB%B6"><span class="nav-number">3.0.1.</span> <span class="nav-text">对于SP的约束条件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%88%E5%B8%A7%E5%92%8C%E6%A0%88%E5%B8%A7%E6%8C%87%E9%92%88"><span class="nav-number">4.</span> <span class="nav-text">栈帧和栈帧指针</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86"><span class="nav-number">5.</span> <span class="nav-text">异常处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E7%94%A8%E9%93%BE%E6%8E%A5"><span class="nav-number">6.</span> <span class="nav-text">引用链接</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
