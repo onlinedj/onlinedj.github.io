@@ -1,7 +1,8 @@
 ---
 title: Arm SDEI 简介
 date: 2023-05-18 15:20:44
-tags: arm
+tags: arm SDEI
+category: ARM
 ---
 
 ## 前言
@@ -144,6 +145,10 @@ Software Delegated Exception interface (SDEI) 是Arm定义的软件代理异常�
 
 ![sdei_event_handle_with_hypervisor](/images/sdei_event_handle_with_hypervisor.png "sdei_event_handle_with_hypervisor")
 
+![sdei_bind_reg_handle_full](/images/sdei_bind_reg_handle_full.png "sdei_bind_reg_handle_full")
+
+![sdei_explicit_event_handle](/images/sdei_explicit_event_handle.png "sdei_explicit_event_handle")
+
 ### 电源管理与事件处理
 
 #### CPU_ON
@@ -157,3 +162,7 @@ Software Delegated Exception interface (SDEI) 是Arm定义的软件代理异常�
 #### CPU_SUSPEND
 
 ![sdei_cpu_sus](/images/sdei_cpu_sus.png "sdei_cpu_sus")
+
+### 代码剖析
+
+前面介绍了arm spec上的一些标准信息，接下来可以针对TFA上的实现做一些分析。

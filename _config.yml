@@ -103,3 +103,21 @@ theme: next
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: ''
+
+# jacky's configs
+## fixed preview instead of full article
+excerpt_length: 50
+## tags config
+tag_generator:
+  enable_index_page: true
+  tag_index_layout: archive
+  per_page: 20
+  sort: alphabetical
+
+## categories
+categories:
+  - ARM
+  - Linux
+  - TEE
+  - Security
+  - Other

@@ -2,6 +2,7 @@
 title: Arm 多核类型
 date: 2022-02-14 15:20:44
 tags: arm
+category: ARM
 ---
 
 ## SMP
