@@ -117,10 +117,11 @@ tag_generator:
   per_page: 20
   sort: alphabetical
 
-## categories
-categories:
-  - ARM
-  - Linux
-  - TEE
-  - Security
-  - Other
+## category config
+category_generator:
+  per_page: 20
+  enable_index_page: true
+  template: category-index.html
+  layout: default
+  sort_by: date
+  order: desc
