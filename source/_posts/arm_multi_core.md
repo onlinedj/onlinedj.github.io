@@ -7,7 +7,7 @@ category: ARM
 
 ## SMP
 Symmetric Multi-Processing (SMP) 直译是同步多处理，即多个核心进行同步的管理调度，可以共享内存、外设等硬件。通常是多个完全相同的核心运行在一个操作系统中，并由任务调度器统一调度。
-
+<!--more-->
 ## AMP
 Asymmetric Multi-processing (AMP) 直译是异步多处理，即多个核心分别承担工作，相互之间隔离内存、外设等硬件。出于安全、时效等设计考虑，多个核心可能独立运行不同的操作系统。
 

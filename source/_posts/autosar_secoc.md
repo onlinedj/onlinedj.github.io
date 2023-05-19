@@ -6,5 +6,5 @@ category: Security
 ---
 
 ## SecOC简介
-
+<!--more-->
 ![secoc arch](/images/secoc_arch.png "AUTOSAR SecOC")

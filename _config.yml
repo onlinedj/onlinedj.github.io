@@ -105,23 +105,3 @@ theme: next
 deploy:
   type: ''
 
-# jacky's configs
-## fixed preview instead of full article
-home:
-  show_full_posts: false
-  excerpt_length: 100
-## tags config
-tag_generator:
-  enable_index_page: true
-  tag_index_layout: archive
-  per_page: 20
-  sort: alphabetical
-
-## category config
-category_generator:
-  per_page: 20
-  enable_index_page: true
-  template: category-index.html
-  layout: default
-  sort_by: date
-  order: desc

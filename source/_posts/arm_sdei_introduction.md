@@ -7,7 +7,7 @@ category: ARM
 
 ## 前言
 最近在重新梳理Arm TrustedFirmware代码，恰逢TF-A拉出v2.9-rc0版本，相较现在很多厂商在用的旧版v1.4(2017.7)，增加了很多功能特性，包括Arm架构特性RME、SVE、SME、TRBE、BRBE、MPAM、PAUTH、MTE、BTI、PAN、AMU、SPE等，以及SPMD/SPMC（SPCI）、DRTM、SDEI、RMMD、MeasureBoot、CCA COT等软件服务。本文将针对SDEI标准及代码实现（待更新）进行深入分析。
-
+<!--more-->
 [Change Log](https://trustedfirmware-a.readthedocs.io/en/latest/change-log.html)
 
 ## SDEI
