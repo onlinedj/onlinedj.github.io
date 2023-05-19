@@ -70,6 +70,7 @@ default_category: uncategorized
 category_map:
 tag_map:
 
+
 # Metadata elements
 ## https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
 meta_generator: true
@@ -106,7 +107,9 @@ deploy:
 
 # jacky's configs
 ## fixed preview instead of full article
-excerpt_length: 50
+home:
+  show_full_posts: false
+  excerpt_length: 100
 ## tags config
 tag_generator:
   enable_index_page: true
