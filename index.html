@@ -114,21 +114,6 @@
     <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
 
   </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
   </ul>
 </nav>
 
@@ -187,7 +172,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-19 08:14:12" itemprop="dateModified" datetime="2023-05-19T08:14:12+00:00">2023-05-19</time>
+                <time title="修改时间：2023-05-19 09:23:10" itemprop="dateModified" datetime="2023-05-19T09:23:10+00:00">2023-05-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -211,179 +196,14 @@
 
       
           <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近在重新梳理Arm TrustedFirmware代码，恰逢TF-A拉出v2.9-rc0版本，相较现在很多厂商在用的旧版v1.4(2017.7)，增加了很多功能特性，包括Arm架构特性RME、SVE、SME、TRBE、BRBE、MPAM、PAUTH、MTE、BTI、PAN、AMU、SPE等，以及SPMD/SPMC（SPCI）、DRTM、SDEI、RMMD、MeasureBoot、CCA COT等软件服务。本文将针对SDEI标准及代码实现（待更新）进行深入分析。</p>
-<p><a target="_blank" rel="noopener" href="https://trustedfirmware-a.readthedocs.io/en/latest/change-log.html">Change Log</a></p>
-<h2 id="SDEI"><a href="#SDEI" class="headerlink" title="SDEI"></a>SDEI</h2><p>Software Delegated Exception interface (SDEI) 是Arm定义的软件代理异常处理接口，用于非安全世界注册handler到TFA来接收底层系统事件通知。</p>
-<p><a target="_blank" rel="noopener" href="https://developer.arm.com/documentation/den0054/c/?lang=en">Arm Specification: DEN0054</a><br><a target="_blank" rel="noopener" href="https://trustedfirmware-a.readthedocs.io/en/latest/components/sdei.html">TFA SDEI section</a></p>
-<h2 id="场景及用途"><a href="#场景及用途" class="headerlink" title="场景及用途"></a>场景及用途</h2><h3 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h3><ul>
-<li>系统错误处理</li>
-<li>软件看门狗计时器</li>
-<li>内和调试</li>
-<li>采样分析</li>
-</ul>
-<h3 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h3><ol>
-<li>订阅系统事件</li>
-<li>屏蔽系统事件</li>
-<li>系统事件核间迁移</li>
-<li>事件处理过程添加或者移除核</li>
-<li>转换现有中断为SDEI事件</li>
-<li>产生软件事件</li>
-</ol>
-<h2 id="软件模型与定义"><a href="#软件模型与定义" class="headerlink" title="软件模型与定义"></a>软件模型与定义</h2><h3 id="模型"><a href="#模型" class="headerlink" title="模型"></a>模型</h3><p>提升关键中断的优先级的方式有很多种，SDEI利用将系统事件陷入更高异常等级的方式来实现提升优先级，因为高异常等级永远会抢占低异常等级的执行</p>
-<table>
-<thead>
-<tr>
-<th>Exception Level</th>
-<th>Application</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>EL0</td>
-<td>Linux App</td>
-</tr>
-<tr>
-<td>EL1</td>
-<td>Linux OS</td>
-</tr>
-<tr>
-<td>EL2</td>
-<td>Hypervisor Firmware</td>
-</tr>
-<tr>
-<td>EL3</td>
-<td>Trusted Firmware</td>
-</tr>
-</tbody></table>
-<h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><ul>
-<li>Client<br>低异常等级的被成为Client</li>
-<li>Dispatcher<br>高异常等级的被成为Dispatcher</li>
-</ul>
-<ul>
-<li>Event<ul>
-<li> source        来源通常是硬件异常或者中断，当然也可以是软件中断（SGI）</li>
-<li> type          Private(PPI)/Shared(SPI)</li>
-<li> definition    platform event(静态定义)/bound event（client动态注册）</li>
-</ul>
-</li>
-</ul>
-<h3 id="SDEI接口和异常等级"><a href="#SDEI接口和异常等级" class="headerlink" title="SDEI接口和异常等级"></a>SDEI接口和异常等级</h3><h4 id="层级关系及分类"><a href="#层级关系及分类" class="headerlink" title="层级关系及分类"></a>层级关系及分类</h4><ul>
-<li>Physical SDEI  TFA作为dispatcher，nonsecure作为client</li>
-<li>Virtual SDEI   hypervisor作为dispatcher，guest os作为client</li>
-</ul>
-<blockquote>
-<p>注意：secure侧作为client是implementation defined，此处不多介绍</p>
-</blockquote>
-<p><img src="/images/sdei_instances.png" alt="sdei_instances" title="sdei_instances"></p>
-<h4 id="关系对应"><a href="#关系对应" class="headerlink" title="关系对应"></a>关系对应</h4><p>下表总结了当前存在的SDEI实例关系</p>
-<p><img src="/images/sdei_el_relation.png" alt="sdei_el_relation" title="sdei_el_relation"></p>
-<h2 id="SDEI系统概览"><a href="#SDEI系统概览" class="headerlink" title="SDEI系统概览"></a>SDEI系统概览</h2><h3 id="提升事件优先级"><a href="#提升事件优先级" class="headerlink" title="提升事件优先级"></a>提升事件优先级</h3><ul>
-<li>CPU PSTSATE中断mask用于防止中断路由到当前EL</li>
-<li>GIC 中断路由控制寄存器用于将中断通知到更高EL</li>
-</ul>
-<h3 id="Event优先级分类"><a href="#Event优先级分类" class="headerlink" title="Event优先级分类"></a>Event优先级分类</h3><ul>
-<li>Normal priority    动态注册的只能是normal类，比如watchdog timer事件</li>
-<li>Critical priority  只有platform event可以是critical类，抢占所有normal priority event，但是同级不能抢占，比如错误处理事件</li>
-</ul>
-<h4 id="抢占策略"><a href="#抢占策略" class="headerlink" title="抢占策略"></a>抢占策略</h4><p><img src="/images/sdei_preempt.png" alt="sdei_preempt" title="sdei_preempt"></p>
-<h4 id="嵌套层级"><a href="#嵌套层级" class="headerlink" title="嵌套层级"></a>嵌套层级</h4><p>由于只有2级，同级不能抢占，所以最多嵌套2层</p>
-<h3 id="Event-编号"><a href="#Event-编号" class="headerlink" title="Event 编号"></a>Event 编号</h3><p><img src="/images/sdei_event_num.png" alt="sdei_event_num" title="sdei_event_num"></p>
-<h2 id="SDEI-接口"><a href="#SDEI-接口" class="headerlink" title="SDEI 接口"></a>SDEI 接口</h2><table>
-<thead>
-<tr>
-<th>接口</th>
-<th>功能</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>SDEI_VERSION</td>
-<td>返回版本号</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_REGISTER</td>
-<td>注册事件</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_ENABLE</td>
-<td>使能事件</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_DISABLE</td>
-<td>去使能事件</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_CONTEXT</td>
-<td>返回事件触发时client的X0-X17寄存器值</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_COMPLETE</td>
-<td>完成事件</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_COMPLETE_AND_RESUME</td>
-<td>完成事件，恢复client运行</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_UNREGISTER</td>
-<td>取消注册事件</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_STATUS</td>
-<td>事件状态（注册？使能？运行？）</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_GET_INFO</td>
-<td>事件信息（类型、可触发、优先级、路由模式、AFF）</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_ROUTING_SET</td>
-<td>设置路由信息</td>
-</tr>
-<tr>
-<td>SDEI_PE_MASK</td>
-<td>屏蔽PE接收事件</td>
-</tr>
-<tr>
-<td>SDEI_PE_UNMASK</td>
-<td>取消屏蔽PE接收事件</td>
-</tr>
-<tr>
-<td>SDEI_INTERRUPT_BIND</td>
-<td>中断绑定事件</td>
-</tr>
-<tr>
-<td>SDEI_INTERRUPT_RELEASE</td>
-<td>中断绑定释放</td>
-</tr>
-<tr>
-<td>SDEI_EVENT_SIGNAL</td>
-<td>触发事件到PE</td>
-</tr>
-<tr>
-<td>SDEI_FEATURES</td>
-<td>SDEI支持的特性查询</td>
-</tr>
-<tr>
-<td>SDEI_PRIVATE_RESET</td>
-<td>重置当前调用PE的所有私有SDEI事件</td>
-</tr>
-<tr>
-<td>SDEI_SHARED_RESET</td>
-<td>重置当前调用PE的所有共享SDEI事件</td>
-</tr>
-</tbody></table>
-<h2 id="开发者概述"><a href="#开发者概述" class="headerlink" title="开发者概述"></a>开发者概述</h2><h3 id="事件状态机"><a href="#事件状态机" class="headerlink" title="事件状态机"></a>事件状态机</h3><blockquote>
-<p>私有事件是PE私有状态<br>共享事件是全局状态，多PE共享，同一时刻只能有1个实例处理该共享事件<br>bond event必须先bind，再执行下述状态机流程<br>bond event必须取消全部注册才能release</p>
-</blockquote>
-<p><img src="/images/sdei_event_state.png" alt="sdei_event_state" title="sdei_event_state"></p>
-<h3 id="事件注册和处理"><a href="#事件注册和处理" class="headerlink" title="事件注册和处理"></a>事件注册和处理</h3><p><img src="/images/sdei_event_handle.png" alt="sdei_event_handle" title="sdei_event_handle"></p>
-<p><img src="/images/sdei_event_reg_with_hypervisor.png" alt="sdei_event_reg_with_hypervisor" title="sdei_event_reg_with_hypervisor"></p>
-<p><img src="/images/sdei_event_handle_with_hypervisor.png" alt="sdei_event_handle_with_hypervisor" title="sdei_event_handle_with_hypervisor"></p>
-<p><img src="/images/sdei_bind_reg_handle_full.png" alt="sdei_bind_reg_handle_full" title="sdei_bind_reg_handle_full"></p>
-<p><img src="/images/sdei_explicit_event_handle.png" alt="sdei_explicit_event_handle" title="sdei_explicit_event_handle"></p>
-<h3 id="电源管理与事件处理"><a href="#电源管理与事件处理" class="headerlink" title="电源管理与事件处理"></a>电源管理与事件处理</h3><h4 id="CPU-ON"><a href="#CPU-ON" class="headerlink" title="CPU_ON"></a>CPU_ON</h4><p><img src="/images/sdei_cpu_on.png" alt="sdei_cpu_on" title="sdei_cpu_on"></p>
-<h4 id="CPU-OFF"><a href="#CPU-OFF" class="headerlink" title="CPU_OFF"></a>CPU_OFF</h4><p><img src="/images/sdei_cpu_off.png" alt="sdei_cpu_off" title="sdei_cpu_off"></p>
-<h4 id="CPU-SUSPEND"><a href="#CPU-SUSPEND" class="headerlink" title="CPU_SUSPEND"></a>CPU_SUSPEND</h4><p><img src="/images/sdei_cpu_sus.png" alt="sdei_cpu_sus" title="sdei_cpu_sus"></p>
-<h3 id="代码剖析"><a href="#代码剖析" class="headerlink" title="代码剖析"></a>代码剖析</h3><p>前面介绍了arm spec上的一些标准信息，接下来可以针对TFA上的实现做一些分析。</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/05/18/arm_sdei_introduction/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -433,7 +253,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-19 08:14:12" itemprop="dateModified" datetime="2023-05-19T08:14:12+00:00">2023-05-19</time>
+                <time title="修改时间：2023-05-19 09:23:10" itemprop="dateModified" datetime="2023-05-19T09:23:10+00:00">2023-05-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -457,40 +277,14 @@
 
       
           <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文主要介绍了栈相关的技术点， 通过这些点的填充，让大家对栈有一个全面的认识。</p>
-<h2 id="Arm通用寄存器说明"><a href="#Arm通用寄存器说明" class="headerlink" title="Arm通用寄存器说明"></a>Arm通用寄存器说明</h2><p>arm32 包含16个通用寄存器（r0-r15）和 2个特殊寄存器CPSR和SPSR。<br>r0-r12用于通用功能</p>
-<p>r13 通常用来做栈指针(stack pointer), 简称SP</p>
-<p>r14 通常用来做链接寄存器(link register)，用于保存子流程的返回地址，简称LR</p>
-<p>r15 通常用来做程序计数器（program counter）, 用于保存当前要执行的程序地址，简称PC</p>
-<p><em>下表中带后缀的为banked register，也就是在对应的模式下有独立的寄存器</em><br><img src="/images/aarch32_registers.png" alt="aarch32 registers"></p>
-<p>根据AAPCS32规范的定义, 对通用寄存器的使用做了进一步限定<br>其中，</p>
-<p>r0-r3 作为输入参数</p>
-<p>r4-r11 作为变量寄存器使用</p>
-<p>根据平台定义，r9 还可以作为static base/ thread register</p>
-<p>r11 可以用作栈帧(frame pointer)使用，简称FP</p>
-<p>r12 是用作intra process scratch register，简称IP<br><img src="/images/aapcs32_regs.png" alt="aapcs32 registers"></p>
-<p>关于这些通用寄存器的别名，可以参考下图</p>
-<p><img src="/images/predeclared_regs.png" alt="predeclared register names"></p>
-<p>把两者结合起来看，总结如下图</p>
-<p><img src="/images/apcs_predeclare_match.png" alt="predeclared register match"></p>
-<h2 id="栈和栈指针"><a href="#栈和栈指针" class="headerlink" title="栈和栈指针"></a>栈和栈指针</h2><p>对于执行一段程序而言，我们需要以下几个部分：<br>text  data  bss  heap  stack</p>
-<p><img src="/images/program_memory_layout.jpg" alt="program layout"></p>
-<p>其中栈是一段连续的内存空间，栈的使用从高地址往低地址，先进后出，栈指针存储了当前栈顶的位置，对于编译器来说，它会预计算当前函数所需栈空间，然后进入函数后先分配栈空间。</p>
-<pre><code>#### 对于SP的约束条件
-- stack_limit &lt; SP &lt; stack_base
-- SP是4字节对齐
-</code></pre>
-<h2 id="栈帧和栈帧指针"><a href="#栈帧和栈帧指针" class="headerlink" title="栈帧和栈帧指针"></a>栈帧和栈帧指针</h2><p>栈帧可以理解成函数所有局部变量压栈组合形成的一个数据结构，通常会把FP放到栈顶</p>
-<p>栈帧指针（FP）存储了当前函数的栈顶位置， 当进入一个新函数的时候， 首先将FP的值（上级函数栈顶地址）压栈到此函数的栈顶， 把当前函数栈顶地址写入FP</p>
-<p>等到函数结束的时候，再将上级函数的栈帧指针出栈恢复到FP， 通过栈帧指针的应用，形成了一个栈帧链表，能够快速恢复函数的栈。</p>
-<p><strong>栈帧指针的使用会提高编译器效率，降低输出代码复杂度，但是栈帧指针并不是必须的，没有FP，代码一样可以正常执行</strong></p>
-<p><img src="/images/stack_frame.png" alt="stack frame"></p>
-<h2 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h2><p>在各类异常、中断的处理中，由于切换了上下文，我们在执行异常处理代码之前，必须保存通用寄存器到栈中，否则可能无法恢复之前的上下文。</p>
-<p>可以看到SP在各个模式下都有一个banked寄存器，这样就方便我们在不同上下文使用不同的栈内存。<br>比如收到一个irq中断，cpu切换到irq mode， sp默认使用的是sp_irq</p>
-<h2 id="引用链接"><a href="#引用链接" class="headerlink" title="引用链接"></a>引用链接</h2><p>[aarch32_registers] <a target="_blank" rel="noopener" href="https://developer.arm.com/documentation/dui0801/k/Overview-of-AArch32-state/Registers-in-AArch32-state?lang=en">https://developer.arm.com/documentation/dui0801/k/Overview-of-AArch32-state/Registers-in-AArch32-state?lang=en</a></p>
-<p>[AAPCS32] <a target="_blank" rel="noopener" href="https://github.com/ARM-software/abi-aa/releases/download/2022Q3/aapcs32.pdf">https://github.com/ARM-software/abi-aa/releases/download/2022Q3/aapcs32.pdf</a></p>
-<p>[predeclared register names] <a target="_blank" rel="noopener" href="https://developer.arm.com/documentation/dui0068/b/Assembler-Reference/Predefined-register-and-coprocessor-names/Predeclared-register-names">https://developer.arm.com/documentation/dui0068/b/Assembler-Reference/Predefined-register-and-coprocessor-names/Predeclared-register-names</a></p>
-<p>[apcs register match] <a target="_blank" rel="noopener" href="https://developer.arm.com/documentation/dui0041/c/ARM-Procedure-Call-Standard/APCS-definition/APCS-register-names-and-roles">https://developer.arm.com/documentation/dui0041/c/ARM-Procedure-Call-Standard/APCS-definition/APCS-register-names-and-roles</a></p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/12/23/arm_stack_pointer/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -540,7 +334,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-19 08:14:12" itemprop="dateModified" datetime="2023-05-19T08:14:12+00:00">2023-05-19</time>
+                <time title="修改时间：2023-05-19 09:23:10" itemprop="dateModified" datetime="2023-05-19T09:23:10+00:00">2023-05-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -564,10 +358,14 @@
 
       
           <h2 id="SMP"><a href="#SMP" class="headerlink" title="SMP"></a>SMP</h2><p>Symmetric Multi-Processing (SMP) 直译是同步多处理，即多个核心进行同步的管理调度，可以共享内存、外设等硬件。通常是多个完全相同的核心运行在一个操作系统中，并由任务调度器统一调度。</p>
-<h2 id="AMP"><a href="#AMP" class="headerlink" title="AMP"></a>AMP</h2><p>Asymmetric Multi-processing (AMP) 直译是异步多处理，即多个核心分别承担工作，相互之间隔离内存、外设等硬件。出于安全、时效等设计考虑，多个核心可能独立运行不同的操作系统。</p>
-<h2 id="HMP"><a href="#HMP" class="headerlink" title="HMP"></a>HMP</h2><p>Heterogeneous multi-processing (HMP) 是异质的多处理，即将多核以cluster分组，组内多核是微架构相同的核，组间只需保证指令集架构相同。通常HMP多个核心运行在统一的调度器中。</p>
-<h2 id="CACHE"><a href="#CACHE" class="headerlink" title="CACHE"></a>CACHE</h2><p>SMP最简单，多个完全相同的核组合在一起，共享L2 cache,可以保证cache一致性。<br>AMP因为多个核心是独立运行,不需要关心cache一致性。<br>HMP可以理解为多组SMP，需要保证组间cache一致性。<br>在2013引入big.LITTLE技术中，采用cache coherent interconnect,在2017年引入第二代DynamIQ big.LITTLE技术中，增加了shared L3<br><img src="/images/dynamIQ110.svg" alt="DSU-110 arch" title="DSU-110"></p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/02/14/arm_multi_core/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -617,7 +415,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-19 08:14:12" itemprop="dateModified" datetime="2023-05-19T08:14:12+00:00">2023-05-19</time>
+                <time title="修改时间：2023-05-19 09:23:10" itemprop="dateModified" datetime="2023-05-19T09:23:10+00:00">2023-05-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -640,8 +438,15 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="SecOC简介"><a href="#SecOC简介" class="headerlink" title="SecOC简介"></a>SecOC简介</h2><p><img src="/images/secoc_arch.png" alt="secoc arch" title="AUTOSAR SecOC"></p>
-
+          <h2 id="SecOC简介"><a href="#SecOC简介" class="headerlink" title="SecOC简介"></a>SecOC简介</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/01/29/autosar_secoc/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -722,19 +527,20 @@
 <div class="site-state-wrap motion-element">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
+          <a href="/archives">
           <span class="site-state-item-count">4</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
+            <a href="/categories/">
         <span class="site-state-item-count">2</span>
-        <span class="site-state-item-name">分类</span>
+        <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
+            <a href="/tags/">
         <span class="site-state-item-count">3</span>
-        <span class="site-state-item-name">标签</span>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
