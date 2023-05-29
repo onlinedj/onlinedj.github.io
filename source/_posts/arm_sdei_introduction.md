@@ -1,7 +1,7 @@
 ---
-title: Arm SDEI 简介
+title: Arm std service 之 SDEI
 date: 2023-05-18 15:20:44
-tags: arm SDEI
+tags: SDEI
 category: ARM
 ---
 
@@ -139,15 +139,21 @@ Software Delegated Exception interface (SDEI) 是Arm定义的软件代理异常�
 
 ### 事件注册和处理
 
-![sdei_event_handle](/images/sdei_event_handle.png "sdei_event_handle")
+#### Physical SDEI event
 
-![sdei_event_reg_with_hypervisor](/images/sdei_event_reg_with_hypervisor.png "sdei_event_reg_with_hypervisor")
-
-![sdei_event_handle_with_hypervisor](/images/sdei_event_handle_with_hypervisor.png "sdei_event_handle_with_hypervisor")
-
+中断触发的SDEI事件的绑定、注册与处理
 ![sdei_bind_reg_handle_full](/images/sdei_bind_reg_handle_full.png "sdei_bind_reg_handle_full")
 
+显式调用的SDEI事件的注册、处理流程
 ![sdei_explicit_event_handle](/images/sdei_explicit_event_handle.png "sdei_explicit_event_handle")
+
+#### Virtual SDEI 事件
+
+带有hypervisor的事件注册
+![sdei_event_reg_with_hypervisor](/images/sdei_event_reg_with_hypervisor.png "sdei_event_reg_with_hypervisor")
+
+带有hypervisor的事件处理
+![sdei_event_handle_with_hypervisor](/images/sdei_event_handle_with_hypervisor.png "sdei_event_handle_with_hypervisor")
 
 ### 电源管理与事件处理
 
