@@ -22,7 +22,7 @@
 
   <meta name="description" content="前言最近在重新梳理Arm TrustedFirmware代码，恰逢TF-A拉出v2.9-rc0版本，相较现在很多厂商在用的旧版v1.4(2017.7)，增加了很多功能特性，包括Arm架构特性RME、SVE、SME、TRBE、BRBE、MPAM、PAUTH、MTE、BTI、PAN、AMU、SPE等，以及SPMD&#x2F;SPMC（SPCI）、DRTM、SDEI、RMMD、MeasureBoot、CCA CO">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Arm SDEI 简介">
+<meta property="og:title" content="Arm std service 之 SDEI">
 <meta property="og:url" content="http://xinle.ink/2023/05/18/arm_sdei_introduction/index.html">
 <meta property="og:site_name" content="超神微步足道">
 <meta property="og:description" content="前言最近在重新梳理Arm TrustedFirmware代码，恰逢TF-A拉出v2.9-rc0版本，相较现在很多厂商在用的旧版v1.4(2017.7)，增加了很多功能特性，包括Arm架构特性RME、SVE、SME、TRBE、BRBE、MPAM、PAUTH、MTE、BTI、PAN、AMU、SPE等，以及SPMD&#x2F;SPMC（SPCI）、DRTM、SDEI、RMMD、MeasureBoot、CCA CO">
@@ -32,18 +32,17 @@
 <meta property="og:image" content="http://xinle.ink/images/sdei_preempt.png">
 <meta property="og:image" content="http://xinle.ink/images/sdei_event_num.png">
 <meta property="og:image" content="http://xinle.ink/images/sdei_event_state.png">
-<meta property="og:image" content="http://xinle.ink/images/sdei_event_handle.png">
-<meta property="og:image" content="http://xinle.ink/images/sdei_event_reg_with_hypervisor.png">
-<meta property="og:image" content="http://xinle.ink/images/sdei_event_handle_with_hypervisor.png">
 <meta property="og:image" content="http://xinle.ink/images/sdei_bind_reg_handle_full.png">
 <meta property="og:image" content="http://xinle.ink/images/sdei_explicit_event_handle.png">
+<meta property="og:image" content="http://xinle.ink/images/sdei_event_reg_with_hypervisor.png">
+<meta property="og:image" content="http://xinle.ink/images/sdei_event_handle_with_hypervisor.png">
 <meta property="og:image" content="http://xinle.ink/images/sdei_cpu_on.png">
 <meta property="og:image" content="http://xinle.ink/images/sdei_cpu_off.png">
 <meta property="og:image" content="http://xinle.ink/images/sdei_cpu_sus.png">
 <meta property="article:published_time" content="2023-05-18T15:20:44.000Z">
-<meta property="article:modified_time" content="2023-05-19T09:23:10.931Z">
+<meta property="article:modified_time" content="2023-05-29T03:39:15.248Z">
 <meta property="article:author" content="Jacky Yang">
-<meta property="article:tag" content="arm SDEI">
+<meta property="article:tag" content="SDEI">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://xinle.ink/images/sdei_instances.png">
 
@@ -60,7 +59,7 @@
   };
 </script>
 
-  <title>Arm SDEI 简介 | 超神微步足道</title>
+  <title>Arm std service 之 SDEI | 超神微步足道</title>
   
 
 
@@ -174,7 +173,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Arm SDEI 简介
+          Arm std service 之 SDEI
         </h1>
 
         <div class="post-meta">
@@ -191,7 +190,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-19 09:23:10" itemprop="dateModified" datetime="2023-05-19T09:23:10+00:00">2023-05-19</time>
+                <time title="修改时间：2023-05-29 03:39:15" itemprop="dateModified" datetime="2023-05-29T03:39:15+00:00">2023-05-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -379,11 +378,10 @@
 <p>私有事件是PE私有状态<br>共享事件是全局状态，多PE共享，同一时刻只能有1个实例处理该共享事件<br>bond event必须先bind，再执行下述状态机流程<br>bond event必须取消全部注册才能release</p>
 </blockquote>
 <p><img src="/images/sdei_event_state.png" alt="sdei_event_state" title="sdei_event_state"></p>
-<h3 id="事件注册和处理"><a href="#事件注册和处理" class="headerlink" title="事件注册和处理"></a>事件注册和处理</h3><p><img src="/images/sdei_event_handle.png" alt="sdei_event_handle" title="sdei_event_handle"></p>
-<p><img src="/images/sdei_event_reg_with_hypervisor.png" alt="sdei_event_reg_with_hypervisor" title="sdei_event_reg_with_hypervisor"></p>
-<p><img src="/images/sdei_event_handle_with_hypervisor.png" alt="sdei_event_handle_with_hypervisor" title="sdei_event_handle_with_hypervisor"></p>
-<p><img src="/images/sdei_bind_reg_handle_full.png" alt="sdei_bind_reg_handle_full" title="sdei_bind_reg_handle_full"></p>
-<p><img src="/images/sdei_explicit_event_handle.png" alt="sdei_explicit_event_handle" title="sdei_explicit_event_handle"></p>
+<h3 id="事件注册和处理"><a href="#事件注册和处理" class="headerlink" title="事件注册和处理"></a>事件注册和处理</h3><h4 id="Physical-SDEI-event"><a href="#Physical-SDEI-event" class="headerlink" title="Physical SDEI event"></a>Physical SDEI event</h4><p>中断触发的SDEI事件的绑定、注册与处理<br><img src="/images/sdei_bind_reg_handle_full.png" alt="sdei_bind_reg_handle_full" title="sdei_bind_reg_handle_full"></p>
+<p>显式调用的SDEI事件的注册、处理流程<br><img src="/images/sdei_explicit_event_handle.png" alt="sdei_explicit_event_handle" title="sdei_explicit_event_handle"></p>
+<h4 id="Virtual-SDEI-事件"><a href="#Virtual-SDEI-事件" class="headerlink" title="Virtual SDEI 事件"></a>Virtual SDEI 事件</h4><p>带有hypervisor的事件注册<br><img src="/images/sdei_event_reg_with_hypervisor.png" alt="sdei_event_reg_with_hypervisor" title="sdei_event_reg_with_hypervisor"></p>
+<p>带有hypervisor的事件处理<br><img src="/images/sdei_event_handle_with_hypervisor.png" alt="sdei_event_handle_with_hypervisor" title="sdei_event_handle_with_hypervisor"></p>
 <h3 id="电源管理与事件处理"><a href="#电源管理与事件处理" class="headerlink" title="电源管理与事件处理"></a>电源管理与事件处理</h3><h4 id="CPU-ON"><a href="#CPU-ON" class="headerlink" title="CPU_ON"></a>CPU_ON</h4><p><img src="/images/sdei_cpu_on.png" alt="sdei_cpu_on" title="sdei_cpu_on"></p>
 <h4 id="CPU-OFF"><a href="#CPU-OFF" class="headerlink" title="CPU_OFF"></a>CPU_OFF</h4><p><img src="/images/sdei_cpu_off.png" alt="sdei_cpu_off" title="sdei_cpu_off"></p>
 <h4 id="CPU-SUSPEND"><a href="#CPU-SUSPEND" class="headerlink" title="CPU_SUSPEND"></a>CPU_SUSPEND</h4><p><img src="/images/sdei_cpu_sus.png" alt="sdei_cpu_sus" title="sdei_cpu_sus"></p>
@@ -403,7 +401,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://xinle.ink/2023/05/18/arm_sdei_introduction/" title="Arm SDEI 简介">http://xinle.ink/2023/05/18/arm_sdei_introduction/</a>
+    <a href="http://xinle.ink/2023/05/18/arm_sdei_introduction/" title="Arm std service 之 SDEI">http://xinle.ink/2023/05/18/arm_sdei_introduction/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -414,7 +412,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/arm-SDEI/" rel="tag"># arm SDEI</a>
+              <a href="/tags/SDEI/" rel="tag"># SDEI</a>
           </div>
 
         
@@ -426,7 +424,10 @@
     <a href="/2022/12/23/arm_stack_pointer/" rel="prev" title="Arm 栈指针漫谈">
       <i class="fa fa-chevron-left"></i> Arm 栈指针漫谈
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/22/arm_drtm_introduction/" rel="next" title="Arm std service 之 DRTM">
+      Arm std service 之 DRTM <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -485,7 +486,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SDEI"><span class="nav-number">2.</span> <span class="nav-text">SDEI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF%E5%8F%8A%E7%94%A8%E9%80%94"><span class="nav-number">3.</span> <span class="nav-text">场景及用途</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF"><span class="nav-number">3.1.</span> <span class="nav-text">场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E9%80%94"><span class="nav-number">3.2.</span> <span class="nav-text">用途</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%AE%9A%E4%B9%89"><span class="nav-number">4.</span> <span class="nav-text">软件模型与定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B"><span class="nav-number">4.1.</span> <span class="nav-text">模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">4.2.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDEI%E6%8E%A5%E5%8F%A3%E5%92%8C%E5%BC%82%E5%B8%B8%E7%AD%89%E7%BA%A7"><span class="nav-number">4.3.</span> <span class="nav-text">SDEI接口和异常等级</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B1%82%E7%BA%A7%E5%85%B3%E7%B3%BB%E5%8F%8A%E5%88%86%E7%B1%BB"><span class="nav-number">4.3.1.</span> <span class="nav-text">层级关系及分类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E7%B3%BB%E5%AF%B9%E5%BA%94"><span class="nav-number">4.3.2.</span> <span class="nav-text">关系对应</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SDEI%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%A7%88"><span class="nav-number">5.</span> <span class="nav-text">SDEI系统概览</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%90%E5%8D%87%E4%BA%8B%E4%BB%B6%E4%BC%98%E5%85%88%E7%BA%A7"><span class="nav-number">5.1.</span> <span class="nav-text">提升事件优先级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event%E4%BC%98%E5%85%88%E7%BA%A7%E5%88%86%E7%B1%BB"><span class="nav-number">5.2.</span> <span class="nav-text">Event优先级分类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A2%E5%8D%A0%E7%AD%96%E7%95%A5"><span class="nav-number">5.2.1.</span> <span class="nav-text">抢占策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B5%8C%E5%A5%97%E5%B1%82%E7%BA%A7"><span class="nav-number">5.2.2.</span> <span class="nav-text">嵌套层级</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event-%E7%BC%96%E5%8F%B7"><span class="nav-number">5.3.</span> <span class="nav-text">Event 编号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SDEI-%E6%8E%A5%E5%8F%A3"><span class="nav-number">6.</span> <span class="nav-text">SDEI 接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%8F%91%E8%80%85%E6%A6%82%E8%BF%B0"><span class="nav-number">7.</span> <span class="nav-text">开发者概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E7%8A%B6%E6%80%81%E6%9C%BA"><span class="nav-number">7.1.</span> <span class="nav-text">事件状态机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E6%B3%A8%E5%86%8C%E5%92%8C%E5%A4%84%E7%90%86"><span class="nav-number">7.2.</span> <span class="nav-text">事件注册和处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%B5%E6%BA%90%E7%AE%A1%E7%90%86%E4%B8%8E%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86"><span class="nav-number">7.3.</span> <span class="nav-text">电源管理与事件处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CPU-ON"><span class="nav-number">7.3.1.</span> <span class="nav-text">CPU_ON</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CPU-OFF"><span class="nav-number">7.3.2.</span> <span class="nav-text">CPU_OFF</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CPU-SUSPEND"><span class="nav-number">7.3.3.</span> <span class="nav-text">CPU_SUSPEND</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%89%96%E6%9E%90"><span class="nav-number">7.4.</span> <span class="nav-text">代码剖析</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SDEI"><span class="nav-number">2.</span> <span class="nav-text">SDEI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF%E5%8F%8A%E7%94%A8%E9%80%94"><span class="nav-number">3.</span> <span class="nav-text">场景及用途</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF"><span class="nav-number">3.1.</span> <span class="nav-text">场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E9%80%94"><span class="nav-number">3.2.</span> <span class="nav-text">用途</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%AE%9A%E4%B9%89"><span class="nav-number">4.</span> <span class="nav-text">软件模型与定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B"><span class="nav-number">4.1.</span> <span class="nav-text">模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">4.2.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SDEI%E6%8E%A5%E5%8F%A3%E5%92%8C%E5%BC%82%E5%B8%B8%E7%AD%89%E7%BA%A7"><span class="nav-number">4.3.</span> <span class="nav-text">SDEI接口和异常等级</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B1%82%E7%BA%A7%E5%85%B3%E7%B3%BB%E5%8F%8A%E5%88%86%E7%B1%BB"><span class="nav-number">4.3.1.</span> <span class="nav-text">层级关系及分类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E7%B3%BB%E5%AF%B9%E5%BA%94"><span class="nav-number">4.3.2.</span> <span class="nav-text">关系对应</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SDEI%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%A7%88"><span class="nav-number">5.</span> <span class="nav-text">SDEI系统概览</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%90%E5%8D%87%E4%BA%8B%E4%BB%B6%E4%BC%98%E5%85%88%E7%BA%A7"><span class="nav-number">5.1.</span> <span class="nav-text">提升事件优先级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event%E4%BC%98%E5%85%88%E7%BA%A7%E5%88%86%E7%B1%BB"><span class="nav-number">5.2.</span> <span class="nav-text">Event优先级分类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A2%E5%8D%A0%E7%AD%96%E7%95%A5"><span class="nav-number">5.2.1.</span> <span class="nav-text">抢占策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B5%8C%E5%A5%97%E5%B1%82%E7%BA%A7"><span class="nav-number">5.2.2.</span> <span class="nav-text">嵌套层级</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event-%E7%BC%96%E5%8F%B7"><span class="nav-number">5.3.</span> <span class="nav-text">Event 编号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SDEI-%E6%8E%A5%E5%8F%A3"><span class="nav-number">6.</span> <span class="nav-text">SDEI 接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%8F%91%E8%80%85%E6%A6%82%E8%BF%B0"><span class="nav-number">7.</span> <span class="nav-text">开发者概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E7%8A%B6%E6%80%81%E6%9C%BA"><span class="nav-number">7.1.</span> <span class="nav-text">事件状态机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E6%B3%A8%E5%86%8C%E5%92%8C%E5%A4%84%E7%90%86"><span class="nav-number">7.2.</span> <span class="nav-text">事件注册和处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Physical-SDEI-event"><span class="nav-number">7.2.1.</span> <span class="nav-text">Physical SDEI event</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Virtual-SDEI-%E4%BA%8B%E4%BB%B6"><span class="nav-number">7.2.2.</span> <span class="nav-text">Virtual SDEI 事件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%B5%E6%BA%90%E7%AE%A1%E7%90%86%E4%B8%8E%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86"><span class="nav-number">7.3.</span> <span class="nav-text">电源管理与事件处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CPU-ON"><span class="nav-number">7.3.1.</span> <span class="nav-text">CPU_ON</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CPU-OFF"><span class="nav-number">7.3.2.</span> <span class="nav-text">CPU_OFF</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CPU-SUSPEND"><span class="nav-number">7.3.3.</span> <span class="nav-text">CPU_SUSPEND</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%89%96%E6%9E%90"><span class="nav-number">7.4.</span> <span class="nav-text">代码剖析</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -500,7 +501,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/archives">
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -511,7 +512,7 @@
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
